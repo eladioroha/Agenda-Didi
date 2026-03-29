@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+// ─── Services ─────────────────────────────────────────────────────────────────
+model Service {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  durationMins Int
+  price        Float
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
+// ─── Appointments ─────────────────────────────────────────────────────────────
+model Appointment {
+  id           String            @id @default(cuid())
+  clientName   String
+  clientPhone  String
+  clientEmail  String?
+  serviceId    String
+  service      Service           @relation(fields: [serviceId], references: [id])
+  startTime    DateTime
+  endTime      DateTime
+  status       AppointmentStatus @default(PENDING)
+  notes        String?
+  reminderSent Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([startTime])
+  @@index([status])
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// ─── Working Schedule ─────────────────────────────────────────────────────────
+model WorkingHours {
+  id          String  @id @default(cuid())
+  dayOfWeek   Int
+  isOpen      Boolean @default(true)
+  openTime    String
+  closeTime   String
+  slotGapMins Int     @default(15)
+}
+
+// ─── Blocked Dates ────────────────────────────────────────────────────────────
+model BlockedDate {
+  id     String   @id @default(cuid())
+  date   DateTime
+  reason String?
+}
